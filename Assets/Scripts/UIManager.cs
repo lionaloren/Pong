@@ -5,10 +5,9 @@ using TMPro;
 
 public class UIManager : MonoBehaviour
 {
-    // --- PERBAIKAN: MENAMBAH DEFINISI SINGLETON ---
+
     public static UIManager Instance;
 
-    // --- Referensi UI (WAJIB di-Drag dari Hierarchy ke Inspector) ---
     [Header("Game UI References")]
     public TextMeshProUGUI scoreTextP1;
     public TextMeshProUGUI scoreTextP2;
@@ -21,7 +20,7 @@ public class UIManager : MonoBehaviour
     public GameObject gameUIPanel;
     public GameObject howToPlayPanel; 
     public GameObject pausePanel; 
-    public GameObject goldenGoalPanel; // ⭐ BARU: Panel Golden Goal (untuk transisi)
+    public GameObject goldenGoalPanel; 
 
     [Header("Win/Lose Image Assets")]
     public GameObject player1WinImage; 
@@ -30,36 +29,35 @@ public class UIManager : MonoBehaviour
     public GameObject youLoseImage; 
 
     [Header("Audio Controls")]
-    public UnityEngine.UI.Image[] muteButtons; // Array untuk semua gambar tombol Mute
-    public Sprite muteOnSprite; // Gambar ketika suara AKTIF
-    public Sprite muteOffSprite; // Gambar ketika suara MATI
-    
-    // Variabel untuk menyimpan pilihan sementara
+    public UnityEngine.UI.Image[] muteButtons; 
+
+    public Sprite muteOnSprite; 
+
+    public Sprite muteOffSprite; 
+
     private float _tempTime;
     private bool _tempIsSinglePlayer;
 
-    // --- SETUP ---
     void Awake()
     {
-        // Logika inisialisasi Singleton
+
         if (Instance == null)
         {
             Instance = this;
         }
     }
-    
+
     void Start()
     {
         if (GameManager.Instance != null)
         {
             GameManager.Instance.uiManager = this;
         }
-        // Tampilkan Main Menu saat game pertama kali dijalankan
+
         ShowPanel(mainMenuPanel);
         UpdateMuteButtons();
     }
-    
-    // --- GAME UI UPDATES ---
+
     public void UpdateScoreUI(int score1, int score2)
     {
         if (scoreTextP1 != null) scoreTextP1.text = score1.ToString();
@@ -76,17 +74,14 @@ public class UIManager : MonoBehaviour
         timerText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
     }
 
-    // --- PANEL MANAGEMENT ---
-    
     public void ShowWinScreen(int playerWhoWon, bool isSinglePlayer, bool isGoldenGoalEnd) 
     {
-        // Nonaktifkan semua gambar kemenangan/kekalahan
+
         player1WinImage.SetActive(false);
         player2WinImage.SetActive(false);
         youWinImage.SetActive(false);
         youLoseImage.SetActive(false);
-        
-        // Logika kemenangan biasa atau setelah Golden Goal berakhir
+
         if (isSinglePlayer)
         {
             if (playerWhoWon == 1) 
@@ -109,7 +104,7 @@ public class UIManager : MonoBehaviour
                 player2WinImage.SetActive(true);
             }
         }
-        
+
         if (SoundManager.Instance != null)
         {
             SoundManager.Instance.PlaySFX(SoundManager.Instance.sfxWinLose);
@@ -120,24 +115,21 @@ public class UIManager : MonoBehaviour
 
     public void ShowPanel(GameObject panelToShow)
     {
-        // 1. Nonaktifkan semua panel menu/overlay utama
+
         mainMenuPanel.SetActive(false);
         selectTimePanel.SetActive(false);
         winLosePanel.SetActive(false);
         howToPlayPanel.SetActive(false); 
         pausePanel.SetActive(false);
-        goldenGoalPanel.SetActive(false); // ⭐ BARU: Nonaktifkan Golden Goal Panel
+        goldenGoalPanel.SetActive(false); 
 
-        // 2. Aktifkan panel yang diminta (jika itu menu/pause)
         if (panelToShow != null && panelToShow != gameUIPanel)
         {
             panelToShow.SetActive(true);
         }
-        
-        // 3. Tentukan kapan GameUIPanel (Score/Timer HUD) harus aktif
+
         bool showHUD = (panelToShow == gameUIPanel || panelToShow == pausePanel || panelToShow == howToPlayPanel);
 
-        // Aktifkan GameUIPanel berdasarkan kondisi showHUD
         gameUIPanel.SetActive(showHUD); 
 
         bool isMenuPanel = (panelToShow == mainMenuPanel || panelToShow == selectTimePanel || panelToShow == howToPlayPanel); 
@@ -154,7 +146,7 @@ public class UIManager : MonoBehaviour
             }
         }
     }
-    
+
     public GameObject GetActiveMenuPanel()
     {
         if (mainMenuPanel.activeSelf) return mainMenuPanel;
@@ -162,12 +154,10 @@ public class UIManager : MonoBehaviour
         if (howToPlayPanel.activeSelf) return howToPlayPanel;
         if (pausePanel.activeSelf) return pausePanel; 
         if (winLosePanel.activeSelf) return winLosePanel; 
-        
+
         return null;
     }
 
-    // --- UI BUTTON FUNCTIONS ---
-    
     public void OnSelectModeClick(bool isSingle)
     {
         if (SoundManager.Instance != null)
@@ -210,7 +200,7 @@ public class UIManager : MonoBehaviour
         }
 
         if (GameManager.Instance == null) return;
-        
+
         GameManager.Instance.PauseGame(); 
         ShowPanel(pausePanel); 
     }
@@ -223,7 +213,7 @@ public class UIManager : MonoBehaviour
         }
 
         if (GameManager.Instance == null) return;
-        
+
         ShowPanel(gameUIPanel); 
         GameManager.Instance.ResumeGame(); 
     }
@@ -234,9 +224,9 @@ public class UIManager : MonoBehaviour
         {
             SoundManager.Instance.PlaySFX(SoundManager.Instance.sfxUIClick);
         }
-        
+
         if (GameManager.Instance == null) return;
-        
+
         GameManager.Instance.ResetGameState(); 
         ShowPanel(mainMenuPanel);
     }
@@ -266,24 +256,21 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    // Dipanggil dari tombol Mute di semua panel
     public void OnMuteButtonClick()
     {
         if (SoundManager.Instance == null) return;
-    
+
         SoundManager.Instance.PlaySFX(SoundManager.Instance.sfxUIClick); 
         SoundManager.Instance.ToggleMute();
         UpdateMuteButtons();
-        
-        // --- LOGIKA UNMUTE (Memanggil ShowPanel untuk me-restart BGM jika perlu) ---
 
         if (!SoundManager.Instance.GetMuteStatus())
         {
-            // Panggil ShowPanel() untuk memastikan BGM mulai lagi jika kita berada di panel menu.
+
             GameObject activePanel = GetActiveMenuPanel();
             if (activePanel != null)
             {
-                // Panggil ulang ShowPanel untuk me-restart logika BGM
+
                 ShowPanel(activePanel);
             }
         }

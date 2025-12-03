@@ -4,16 +4,16 @@ using UnityEngine;
 
 public class BallController : MonoBehaviour
 {
-    // Kecepatan awal bola
+
     public float initialSpeed = 10f;
-    
+
     [Tooltip("Kecepatan rotasi bola saat mengikuti arah gerak")]
     public float rotationSpeed = 10f; 
 
     [Header("Power Up Status")]
     public float currentSpeed; 
-    public int lastPlayerHit = 0; // ⭐ BARU: 1=P1 (Kiri/Merah), 2=P2 (Kanan/Biru), 0=belum dipukul
-    
+    public int lastPlayerHit = 0; 
+
     private Rigidbody2D rb;
     private TrailRenderer trail; 
 
@@ -26,7 +26,7 @@ public class BallController : MonoBehaviour
         {
             trail.emitting = false;
         }
-        
+
         currentSpeed = initialSpeed; 
     }
 
@@ -40,7 +40,7 @@ public class BallController : MonoBehaviour
         float y = Random.Range(-1f, 1f);
 
         Vector2 direction = new Vector2(x, y).normalized;
-        
+
         rb.velocity = direction * currentSpeed;
 
         if (trail != null)
@@ -52,7 +52,7 @@ public class BallController : MonoBehaviour
     public void StopAndClearTrail() 
     {
         rb.velocity = Vector2.zero;
-        
+
         if (trail != null)
         {
             trail.emitting = false;
@@ -68,11 +68,11 @@ public class BallController : MonoBehaviour
         }
         HandleRotation();
     }
-    
+
     public void IncreaseBallSpeed(float multiplier)
     {
         currentSpeed = initialSpeed * multiplier; 
-        
+
         if (rb.velocity.magnitude > 0.01f)
         {
             rb.velocity = rb.velocity.normalized * currentSpeed;
@@ -84,7 +84,7 @@ public class BallController : MonoBehaviour
         if (currentSpeed == initialSpeed) return; 
 
         currentSpeed = initialSpeed;
-        
+
         if (rb.velocity.magnitude > 0.01f)
         {
             rb.velocity = rb.velocity.normalized * currentSpeed;
@@ -104,7 +104,7 @@ public class BallController : MonoBehaviour
             float targetAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
 
             Quaternion targetRotation = Quaternion.Euler(0, 0, targetAngle + 90f);
-            
+
             transform.rotation = Quaternion.Slerp(
                 transform.rotation, 
                 targetRotation, 
@@ -124,7 +124,7 @@ public class BallController : MonoBehaviour
         }
         else if (collision.gameObject.CompareTag("Paddle")) 
         {
-            // Sound SFX Paddle ditangani di PaddleController
+
         }
     }
 }

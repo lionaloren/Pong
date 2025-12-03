@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    // Singleton Instance
     public static GameManager Instance;
 
     [Header("Game Flow & State")]
@@ -13,35 +12,33 @@ public class GameManager : MonoBehaviour
     public bool isGameRunning = false;
     public bool isGoldenGoal = false;
     public bool isSinglePlayerMode = false;
-    public bool isGamePaused = false; // Status Pause
-    
-    // Menyimpan skor dan waktu sebelum masuk Golden Goal
+    public bool isGamePaused = false;
+
     private float tempTimeAtTie;
     private int tempScorePlayer1AtTie;
     private int tempScorePlayer2AtTie;
 
     [Header("Score")]
-    public int scorePlayer1 = 0; // Merah/Kiri
-    public int scorePlayer2 = 0; // Biru/Kanan
-    // Variabel scoreMultiplier lama dihilangkan karena Double Point sekarang Redeem Instan
+    public int scorePlayer1 = 0; 
+
+    public int scorePlayer2 = 0; 
 
     [Header("References")]
     public BallController ball; 
     public UIManager uiManager;
-    // Referensi ke kedua paddle (Wajib untuk AI)
-    public PaddleController paddleRed;   // Player 1 (Kiri/Merah)
-    public PaddleController paddleBlue;  // Player 2 (Kanan/Biru/AI)
+    public PaddleController paddleRed;   
+
+    public PaddleController paddleBlue;  
 
     private Vector3 initialBallPosition; 
-    private Vector2 ballVelocityBeforePause; // Simpan kecepatan bola sebelum Pause
+    private Vector2 ballVelocityBeforePause; 
 
     [Header("Power Up Logic")]
-    private Coroutine doublePointCoroutine; // Dibiarkan jika ingin dipakai untuk durasi PowerUp lain
+    private Coroutine doublePointCoroutine;
     private Coroutine speedUpCoroutine;
 
     void Awake()
     {
-        // Implementasi Singleton
         if (Instance == null)
         {
             Instance = this;
@@ -51,7 +48,7 @@ public class GameManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
-        
+
         if (ball != null)
         {
             initialBallPosition = ball.transform.position;
@@ -79,37 +76,31 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // --- GAME FLOW LOGIC ---
     public void StartGame(float timeSelected, bool singlePlayer) 
     {
-        // Jika ini bukan Golden Goal, reset skor dan waktu.
         if (!isGoldenGoal)
         {
             gameTimeInSeconds = timeSelected;
             timeLeft = gameTimeInSeconds;
             scorePlayer1 = 0;
             scorePlayer2 = 0;
-            // scoreMultiplier = 1; // Dihapus
             isGamePaused = false; 
 
-            // ⭐ BARU: Mulai Spawning Power Up
             if (PowerUpManager.Instance != null)
             {
                 PowerUpManager.Instance.StartSpawning();
             }
         } 
-        
+
         isGameRunning = true;
         isSinglePlayerMode = singlePlayer;
-        
-        // Atur Mode Paddle
+
         paddleRed.SetAI(false); 
         paddleBlue.SetAI(singlePlayer); 
-        
+
         paddleRed.ResetPaddlePosition(); 
         paddleBlue.ResetPaddlePosition(); 
 
-        // Update UI dan Reset Bola
         uiManager.UpdateScoreUI(scorePlayer1, scorePlayer2);
         uiManager.UpdateTimerUI(timeLeft); 
         ResetBall();
@@ -124,7 +115,7 @@ public class GameManager : MonoBehaviour
                 timeLeft -= Time.deltaTime;
                 uiManager.UpdateTimerUI(timeLeft);
             }
-            
+
             if (timeLeft <= 0)
             {
                 isGameRunning = false;
@@ -142,13 +133,12 @@ public class GameManager : MonoBehaviour
             tempTimeAtTie = timeLeft; 
             tempScorePlayer1AtTie = scorePlayer1; 
             tempScorePlayer2AtTie = scorePlayer2; 
-            
-            // ⭐ BARU: Hentikan Spawning Power Up saat transisi Golden Goal
+
             if (PowerUpManager.Instance != null)
             {
                 PowerUpManager.Instance.StopSpawningAndClear();
             }
-            
+
             StartCoroutine(GoldenGoalTransition(2f)); 
         }
         else
@@ -160,64 +150,56 @@ public class GameManager : MonoBehaviour
             }
         }
     }
-    
+
     IEnumerator GoldenGoalTransition(float delay)
     {
-        // 1. Tampilkan Panel Golden Goal
         if (uiManager != null && uiManager.goldenGoalPanel != null)
         {
             uiManager.ShowPanel(uiManager.goldenGoalPanel);
-            // (Play SFX Golden Goal)
         }
-        
-        // 2. Tunggu sebentar
+
         yield return new WaitForSecondsRealtime(delay); 
-        
-        // 3. Set status Golden Goal aktif
+
         isGoldenGoal = true;
-        Time.timeScale = 1f; // Lanjutkan waktu
-        
-        // 4. Mulai ulang game dalam mode Golden Goal (tanpa timer, hanya skor)
+        Time.timeScale = 1f; 
+
         StartGame(gameTimeInSeconds, isSinglePlayerMode); 
-        
-        // 5. Tampilkan kembali HUD Game 
+
         if (uiManager != null)
         {
             uiManager.ShowPanel(uiManager.gameUIPanel);
         }
     }
 
-
-    // --- SCORE & RESET ---
     public void GoalScored(int playerWhoScored)
     {
         if (!isGameRunning && !isGoldenGoal) return; 
 
-        // ⭐ PERUBAHAN: Selalu tambahkan 1 poin. Logika Double Point sudah instan di ActivatePowerUp.
         if (playerWhoScored == 1) 
         {
-            scorePlayer1 += 1; // Sebelumnya += scoreMultiplier;
+            scorePlayer1 += 1; 
+
         }
         else if (playerWhoScored == 2) 
         {
-            scorePlayer2 += 1; // Sebelumnya += scoreMultiplier;
+            scorePlayer2 += 1; 
+
         }
-        
+
         uiManager.UpdateScoreUI(scorePlayer1, scorePlayer2);
-        
+
         if (isGoldenGoal)
         {
             isGameRunning = false;
             isGoldenGoal = false; 
-            
+
             int winner = (playerWhoScored == 1) ? 1 : 2; 
             uiManager.ShowWinScreen(winner, isSinglePlayerMode, true); 
             return;
         }
 
         ResetBall(); 
-        
-        // ⭐ BARU: Reset Speed Multiplier setelah setiap gol
+
         if (ball != null)
         {
             if (speedUpCoroutine != null) StopCoroutine(speedUpCoroutine);
@@ -235,10 +217,10 @@ public class GameManager : MonoBehaviour
         if (ball != null) 
         {
             ball.transform.position = initialBallPosition;
-            // Reset lastPlayerHit agar power up berikutnya tidak langsung aktif tanpa dipukul
+
             ball.lastPlayerHit = 0; 
         }
-        
+
         StartCoroutine(LaunchNewRound(1f)); 
     }
 
@@ -251,8 +233,6 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // --- PAUSE/RESUME/RESTART LOGIC ---
-    // ... (Tidak Berubah) ...
     public void TogglePause()
     {
         if (isGamePaused)
@@ -264,13 +244,13 @@ public class GameManager : MonoBehaviour
             PauseGame();
         }
     }
-    
+
     public void PauseGame()
     {
         if (!isGameRunning && !isGoldenGoal) return; 
-        
+
         isGamePaused = true; 
-        
+
         Rigidbody2D ballRb = ball.GetComponent<Rigidbody2D>();
         if (ballRb != null)
         {
@@ -279,7 +259,7 @@ public class GameManager : MonoBehaviour
         }
 
         Time.timeScale = 0f; 
-        
+
         if (uiManager != null && uiManager.pausePanel != null)
         {
             uiManager.ShowPanel(uiManager.pausePanel); 
@@ -290,12 +270,12 @@ public class GameManager : MonoBehaviour
     {
         isGamePaused = false; 
         Time.timeScale = 1f; 
-        
+
         if (uiManager != null)
         {
             uiManager.ShowPanel(uiManager.gameUIPanel); 
         }
-        
+
         if (isGameRunning || isGoldenGoal)
         {
             Rigidbody2D ballRb = ball.GetComponent<Rigidbody2D>();
@@ -315,14 +295,12 @@ public class GameManager : MonoBehaviour
         isGoldenGoal = false;
         isGamePaused = false; 
         Time.timeScale = 1f; 
-        
-        // ⭐ PERUBAHAN: Hentikan dan Reset semua efek Power Up
+
         if (doublePointCoroutine != null) StopCoroutine(doublePointCoroutine);
         if (speedUpCoroutine != null) StopCoroutine(speedUpCoroutine);
-        // scoreMultiplier = 1; // Dihapus
+
         if (ball != null) ball.ResetBallSpeed(); 
-        
-        // ⭐ BARU: Hentikan Spawning Power Up saat ke Main Menu
+
         if (PowerUpManager.Instance != null)
         {
             PowerUpManager.Instance.StopSpawningAndClear();
@@ -333,7 +311,7 @@ public class GameManager : MonoBehaviour
             ball.StopAndClearTrail(); 
             ball.transform.position = initialBallPosition;
         }
-        
+
         StopAllCoroutines(); 
     }
 
@@ -343,8 +321,7 @@ public class GameManager : MonoBehaviour
         {
             ResumeGame();
         }
-        
-        // ⭐ BARU: Pastikan Power Up Manager mulai lagi
+
         if (PowerUpManager.Instance != null)
         {
             PowerUpManager.Instance.StartSpawning();
@@ -353,22 +330,19 @@ public class GameManager : MonoBehaviour
         StartGame(gameTimeInSeconds, isSinglePlayerMode); 
         uiManager.ShowPanel(uiManager.gameUIPanel);
     }
-    
-    // ⭐ FUNGSI BARU: Logika Aktivasi Power Up (dipanggil dari PowerUpController)
+
     public void ActivatePowerUp(PowerUpType type, float duration)
     {
         if (ball == null) return;
 
-        // Ambil ID pemain yang terakhir memukul bola
         int playerID = ball.lastPlayerHit; 
-        // Hanya Power Up SpeedUp dan ChangeDirection yang bisa diaktifkan jika playerID = 0 (misalnya: bola diluncurkan dari tengah)
-        
+
         switch (type)
         {
             case PowerUpType.DoublePoint:
-                // ⭐ LOGIKA BARU: Terapkan Skor Saat Ini x 2 (Redeem Now)
-                if (playerID == 0) return; // Pastikan ada pemain yang memukul
-                
+
+                if (playerID == 0) return; 
+
                 if (playerID == 1)
                 {
                     scorePlayer1 *= 2; 
@@ -379,8 +353,8 @@ public class GameManager : MonoBehaviour
                     scorePlayer2 *= 2;
                     Debug.Log($"Pemain 2 mendapatkan Double Point! Skor menjadi: {scorePlayer2}");
                 }
-                uiManager.UpdateScoreUI(scorePlayer1, scorePlayer2); // Update UI
-                // Coroutine doublePointCoroutine dihapus/tidak digunakan lagi.
+                uiManager.UpdateScoreUI(scorePlayer1, scorePlayer2); 
+
                 break;
 
             case PowerUpType.ChangeDirection:
@@ -394,7 +368,6 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // ⭐ COROUTINE: Speed Up (Tidak Berubah)
     IEnumerator SpeedUpRoutine(float duration)
     {
         ball.IncreaseBallSpeed(3f); 

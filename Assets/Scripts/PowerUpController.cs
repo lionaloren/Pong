@@ -8,7 +8,6 @@ public class PowerUpController : MonoBehaviour
     [Tooltip("Pilih tipe power up ini di Inspector.")]
     public PowerUpType type; 
 
-    // ⭐ Dipanggil saat bola bersentuhan dengan Trigger Collider
     void OnTriggerEnter2D(Collider2D other)
     {
         if (other.CompareTag("Ball"))
@@ -23,8 +22,7 @@ public class PowerUpController : MonoBehaviour
             {
                 SoundManager.Instance.PlaySFX(SoundManager.Instance.sfxPowerUp);
             }
-            
-            // ⭐ BARU: Sembunyikan Power Up setelah diaktifkan
+
             gameObject.SetActive(false); 
         }
     }
