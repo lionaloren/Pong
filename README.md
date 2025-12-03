@@ -62,7 +62,7 @@ If the match ends with equal scores, one final round determines the winner.
 ## ⬇️ Download
 
 ### **PC Build**
-👉 *Insert Google Drive / Itch.io / GitHub Releases link here*
+👉 *https://binusianorg-my.sharepoint.com/personal/liona_loren_binus_ac_id/_layouts/15/guestaccess.aspx?share=ER_yw3Q-MmlDuf7mXxoP0NwBy31qWd4Bex02VRR0tiSYjA&e=277gcy*
 
 ---
 
